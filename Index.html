@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Doc Tracker Pro | Сучасний трекер завдань</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --grad-start: #667eea;
+            --grad-end: #764ba2;
+            --glass-bg: rgba(255, 255, 255, 0.92);
+            --card-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25);
+            --border-light: rgba(255, 255, 255, 0.5);
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --success: #06d6a0;
+            --success-dark: #05b88a;
+            --danger: #ef476f;
+            --danger-dark: #d43f62;
+            --warning: #ffb703;
+            --warning-dark: #e5a500;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --light-bg: #f8fafc;
+            --border-radius: 28px;
+            --border-radius-sm: 20px;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        /* glassmorphism контейнер */
+        .container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            width: 100%;
+            max-width: 480px;
+            padding: 24px 22px 32px;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-light);
+        }
+
+        /* заголовки */
+        h2, h3 {
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            color: var(--dark);
+            margin-bottom: 16px;
+            font-size: 1.6rem;
+        }
+
+        h3 {
+            font-size: 1.35rem;
+            margin-bottom: 12px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* поля вводу */
+        input, select {
+            width: 100%;
+            padding: 14px 18px;
+            margin: 8px 0 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 44px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: white;
+            transition: all 0.2s;
+            outline: none;
+            color: var(--dark);
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        /* кнопки */
+        .btn {
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: transform 0.15s, background 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+            text-transform: uppercase;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 6px 14px rgba(67, 97, 238, 0.3);
+        }
+        .btn-primary:hover { background: var(--primary-dark); }
+
+        .btn-success {
+            background: var(--success);
+            color: #1e293b;
+            box-shadow: 0 6px 14px rgba(6, 214, 160, 0.3);
+        }
+        .btn-success:hover { background: var(--success-dark); }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 6px 14px rgba(239, 71, 111, 0.3);
+        }
+        .btn-danger:hover { background: var(--danger-dark); }
+
+        .btn-warning {
+            background: var(--warning);
+            color: #1e293b;
+        }
+        .btn-warning:hover { background: var(--warning-dark); }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 16px;
+            font-size: 0.75rem;
+            text-transform: none;
+            font-weight: 600;
+            width: auto;
+            transition: all 0.2s;
+        }
+        .btn-outline:hover {
+            background: rgba(67, 97, 238, 0.08);
+            transform: scale(0.98);
+        }
+
+        .btn-danger-outline {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        .btn-danger-outline:hover {
+            background: rgba(239, 71, 111, 0.08);
+        }
+
+        /* хедер */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .user-info {
+            background: rgba(67, 97, 238, 0.1);
+            padding: 6px 16px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--primary-dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .user-info::before {
+            content: "👤";
+            font-size: 1rem;
+        }
+
+        /* таймер */
+        #timer {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 3.8rem;
+            font-weight: 700;
+            text-align: center;
+            background: var(--light-bg);
+            padding: 20px 10px;
+            border-radius: 56px;
+            margin: 20px 0;
+            letter-spacing: 4px;
+            color: var(--dark);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.02), 0 8px 20px rgba(0,0,0,0.05);
+            border: 1px solid #eef2ff;
+        }
+
+        /* група кнопок трекера */
+        .tracker-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .tracker-actions .btn {
+            flex: 1;
+        }
+
+        /* звіт картки */
+        .report-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 460px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+        .report-item {
+            background: white;
+            border-radius: 24px;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            border: 1px solid #eef2ff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .report-item:hover {
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+        }
+        .report-task {
+            font-weight: 700;
+            color: var(--dark);
+        }
+        .report-time {
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+        .report-duration {
+            font-weight: 700;
+            font-size: 1.2rem;
+            font-family: monospace;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 60px;
+            color: var(--primary-dark);
+        }
+        .total-box {
+            margin-top: 20px;
+            background: linear-gradient(120deg, #eef2ff, #ffffff);
+            border-radius: 28px;
+            padding: 14px 18px;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid #d9e2ef;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: gap 0.2s;
+        }
+        .back-link:hover { gap: 12px; }
+
+        /* допоміжні елементи */
+        .settings-icon {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: 0.2s;
+            display: inline-block;
+            width: 100%;
+        }
+        .settings-icon:hover {
+            color: var(--primary);
+        }
+
+        /* loader */
+        .loader {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray);
+        }
+
+        /* адаптив */
+        @media (max-width: 500px) {
+            .container { padding: 18px; }
+            #timer { font-size: 2.6rem; padding: 14px; letter-spacing: 2px; }
+            .btn { padding: 12px 14px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="appRoot">
+    <!-- 1. НАЛАШТУВАННЯ URL -->
+    <div id="setupScreen">
+        <h2>⚙️ Налаштування</h2>
+        <input type="text" id="urlAuth" placeholder="https://ваш-сервер/auth.php" autocomplete="off">
+        <input type="text" id="urlLogs" placeholder="https://ваш-сервер/tracker.php" autocomplete="off">
+        <button class="btn btn-primary" id="saveSettingsBtn">Зберегти →</button>
+        <div class="settings-icon" id="skipSetupHint">💡 Введіть URL та продовжте</div>
+    </div>
+
+    <!-- 2. ЛОГІН -->
+    <div id="loginScreen" class="hidden">
+        <h2>🔐 Вхід</h2>
+        <select id="userSelect"><option>Завантаження...</option></select>
+        <input type="password" id="passInput" placeholder="Пароль">
+        <button class="btn btn-primary" id="loginBtn">Увійти</button>
+        <div class="settings-icon" id="openSetupFromLogin">⚙️ Змінити URL</div>
+    </div>
+
+    <!-- 3. ТРЕКЕР -->
+    <div id="mainScreen" class="hidden">
+        <div class="header">
+            <button class="btn-outline" id="showReportBtn">📊 ЗВІТ</button>
+            <div class="user-info" id="userNameDisplay"></div>
+            <button class="btn-outline btn-danger-outline" id="logoutBtn">🚪 ВИЙТИ</button>
+        </div>
+
+        <select id="taskSelect">
+            <option value="Заміри">📏 Заміри посилок</option>
+			<option value="Поповнення">📥 Поповнення товару</option>
+			<option value="Інвента">📋 Інвентаризація</option>
+			<option value="Проклейка">🏷️ Проклейка товару</option>
+			<option value="Вивантаження">🚜 Вивантаження</option>
+        </select>
+
+        <div id="timer">00:00:00</div>
+
+        <div class="tracker-actions">
+            <button id="btnStart" class="btn btn-success">СТАРТ</button>
+            <button id="btnPause" class="btn btn-warning hidden">ПАУЗА</button>
+            <button id="btnStop" class="btn btn-danger" disabled>СТОП</button>
+        </div>
+    </div>
+
+    <!-- 4. ЗВІТ -->
+    <div id="reportPage" class="hidden">
+        <div class="back-link" id="closeReportBtn">← Назад до трекера</div>
+        <h3>📋 Мій звіт (сьогодні)</h3>
+        <div id="reportContent" class="report-list">Завантаження...</div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ======================== DOM елементи ========================
+        const setupScreen = document.getElementById('setupScreen');
+        const loginScreen = document.getElementById('loginScreen');
+        const mainScreen = document.getElementById('mainScreen');
+        const reportPage = document.getElementById('reportPage');
+
+        // Поля налаштувань
+        const urlAuthInput = document.getElementById('urlAuth');
+        const urlLogsInput = document.getElementById('urlLogs');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const openSetupFromLogin = document.getElementById('openSetupFromLogin');
+        const skipSetupHint = document.getElementById('skipSetupHint');
+
+        // Логін
+        const userSelect = document.getElementById('userSelect');
+        const passInput = document.getElementById('passInput');
+        const loginBtn = document.getElementById('loginBtn');
+
+        // Трекер
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const taskSelect = document.getElementById('taskSelect');
+        const timerDiv = document.getElementById('timer');
+        const btnStart = document.getElementById('btnStart');
+        const btnPause = document.getElementById('btnPause');
+        const btnStop = document.getElementById('btnStop');
+        const showReportBtn = document.getElementById('showReportBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Звіт
+        const reportContent = document.getElementById('reportContent');
+        const closeReportBtn = document.getElementById('closeReportBtn');
+
+        // ======================== Глобальні змінні ========================
+        let URL_AUTH = localStorage.getItem('urlAuth') || '';
+        let URL_LOGS = localStorage.getItem('urlLogs') || '';
+        let usersData = {};        // {username: password}
+        let currentUserName = "";
+
+        // Таймер
+        let timerInterval = null;
+        let startTime = 0;          // timestamp (Date.now() - elapsed)
+        let elapsedTime = 0;        // мс
+        let isRunning = false;
+        let realStartDateTime = null; // реальний момент початку (для звіту)
+
+        // ======================== Helper функції ========================
+        function switchScreen(activeId) {
+            const screens = ['setupScreen', 'loginScreen', 'mainScreen', 'reportPage'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            document.getElementById(activeId).classList.remove('hidden');
+        }
+
+        function resetTimerUI() {
+            if (timerInterval) clearInterval(timerInterval);
+            isRunning = false;
+            elapsedTime = 0;
+            realStartDateTime = null;
+            timerDiv.textContent = "00:00:00";
+            btnStart.classList.remove('hidden');
+            btnPause.classList.add('hidden');
+            btnStop.disabled = true;
+            btnStart.textContent = "СТАРТ";
+        }
+
+        function updateTimerDisplay() {
+            if (!startTime && elapsedTime === 0) {
+                timerDiv.textContent = "00:00:00";
+                return;
+            }
+            const now = isRunning ? Date.now() : startTime + elapsedTime;
+            const currentElapsed = isRunning ? (Date.now() - startTime) : elapsedTime;
+            let hrs = Math.floor(currentElapsed / 3600000);
+            let mins = Math.floor((currentElapsed % 3600000) / 60000);
+            let secs = Math.floor((currentElapsed % 60000) / 1000);
+            timerDiv.textContent = `${hrs.toString().padStart(2,'0')}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+        }
+
+        function startTimerTick() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (isRunning) {
+                    updateTimerDisplay();
+                }
+            }, 200);
+        }
+
+        // ======================== Основні дії трекера ========================
+        function startTracking() {
+            if (isRunning) return;
+            if (!realStartDateTime) realStartDateTime = new Date(); // перший старт
+            startTime = Date.now() - elapsedTime;
+            isRunning = true;
+            startTimerTick();
+            updateTimerDisplay();
+            btnStart.classList.add('hidden');
+            btnPause.classList.remove('hidden');
+            btnStop.disabled = false;
+        }
+
+        function pauseTracking() {
+            if (!isRunning) return;
+            clearInterval(timerInterval);
+            elapsedTime = Date.now() - startTime;
+            isRunning = false;
+            updateTimerDisplay();
+            btnStart.classList.remove('hidden');
+            btnPause.classList.add('hidden');
+            btnStart.textContent = "ПРОДОВЖИТИ";
+            btnStop.disabled = (elapsedTime === 0);
+        }
+
+        function stopTracking() {
+            if (!confirm("✅ Завершити завдання та зберегти дані?")) return;
+            if (timerInterval) clearInterval(timerInterval);
+            // Фінальний час
+            const finalElapsed = isRunning ? (Date.now() - startTime) : elapsedTime;
+            const hours = Math.floor(finalElapsed / 3600000);
+            const minutes = Math.floor((finalElapsed % 3600000) / 60000);
+            const seconds = Math.floor((finalElapsed % 60000) / 1000);
+            const durationStr = `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+            
+            const nowDate = new Date();
+            const startDateObj = realStartDateTime ? realStartDateTime : new Date();
+            const payload = {
+                date: nowDate.toLocaleDateString('uk-UA'),
+                username: currentUserName,
+                task: taskSelect.value,
+                startTime: startDateObj.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'}),
+                endTime: nowDate.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'}),
+                duration: durationStr,
+                pauseDuration: "00:00:00"
+            };
+            
+            // відправка (no-cors)
+            fetch(URL_LOGS, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(e => console.warn("POST ignored (no-cors)", e));
+            
+            alert(`✔️ Завдання "${taskSelect.value}" збережено!\n⏱ Час: ${durationStr}`);
+            resetTimerUI();
+        }
+
+        // ======================== Звіт ========================
+        async function loadReport() {
+            if (!URL_LOGS) {
+                reportContent.innerHTML = "<div class='loader'>❌ Не налаштовано URL логів</div>";
+                return;
+            }
+            reportContent.innerHTML = "<div class='loader'>📡 Завантаження даних...</div>";
+            try {
+                const response = await fetch(`${URL_LOGS}?username=${encodeURIComponent(currentUserName)}`);
+                if (!response.ok) throw new Error("HTTP error");
+                const logs = await response.json();
+                const today = new Date().toLocaleDateString('uk-UA');
+                const todayLogs = logs.filter(l => l.date === today);
+                if (todayLogs.length === 0) {
+                    reportContent.innerHTML = "<div style='text-align:center; padding: 32px;'>✨ Сьогодні записів ще немає</div>";
+                    return;
+                }
+                // підрахунок сумарної тривалості (сек)
+                let totalSeconds = 0;
+                const itemsHtml = todayLogs.map(log => {
+                    let durSec = 0;
+                    if (log.duration) {
+                        const parts = log.duration.split(':');
+                        if (parts.length === 3) {
+                            durSec = parseInt(parts[0])*3600 + parseInt(parts[1])*60 + parseInt(parts[2]);
+                        }
+                    }
+                    totalSeconds += durSec;
+                    return `
+                        <div class="report-item">
+                            <div>
+                                <div class="report-task">${escapeHtml(log.task)}</div>
+                                <div class="report-time">🕒 ${log.startTime || '--'} — ${log.endTime || '--'}</div>
+                            </div>
+                            <div class="report-duration">${log.duration || '00:00:00'}</div>
+                        </div>
+                    `;
+                }).join('');
+                const totalHours = Math.floor(totalSeconds / 3600);
+                const totalMins = Math.floor((totalSeconds % 3600) / 60);
+                const totalSecs = totalSeconds % 60;
+                const totalFormatted = `${totalHours.toString().padStart(2,'0')}:${totalMins.toString().padStart(2,'0')}:${totalSecs.toString().padStart(2,'0')}`;
+                reportContent.innerHTML = `
+                    <div class="report-list">${itemsHtml}</div>
+                    <div class="total-box">
+                        🧾 Загальна тривалість сьогодні: <strong style="font-size:1.2rem;">${totalFormatted}</strong>
+                    </div>
+                `;
+            } catch (err) {
+                console.error(err);
+                reportContent.innerHTML = "<div class='loader'>⚠️ Помилка завантаження звіту. Перевірте URL або CORS.</div>";
+            }
+        }
+
+        function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+        // ======================== Логіка налаштувань ========================
+        function saveSettings() {
+            const newAuth = urlAuthInput.value.trim();
+            const newLogs = urlLogsInput.value.trim();
+            if (!newAuth || !newLogs) {
+                alert("Будь ласка, заповніть обидва URL");
+                return;
+            }
+            localStorage.setItem('urlAuth', newAuth);
+            localStorage.setItem('urlLogs', newLogs);
+            URL_AUTH = newAuth;
+            URL_LOGS = newLogs;
+            resetTimerUI();
+            showLoginScreen();
+        }
+
+        function showSetupFromAny() {
+            resetTimerUI();
+            switchScreen('setupScreen');
+            urlAuthInput.value = URL_AUTH || '';
+            urlLogsInput.value = URL_LOGS || '';
+        }
+
+        // ======================== Логін ========================
+        async function showLoginScreen() {
+            if (!URL_AUTH) {
+                showSetupFromAny();
+                return;
+            }
+            switchScreen('loginScreen');
+            userSelect.innerHTML = '<option>Завантаження користувачів...</option>';
+            try {
+                const response = await fetch(`${URL_AUTH}?action=getUsers`);
+                if (!response.ok) throw new Error('Auth endpoint error');
+                usersData = await response.json();
+                const users = Object.keys(usersData);
+                if (users.length === 0) throw new Error('Немає користувачів');
+                userSelect.innerHTML = users.map(u => `<option value="${u}">${u}</option>`).join('');
+                passInput.value = '';
+            } catch (err) {
+                console.warn(err);
+                userSelect.innerHTML = '<option>❌ Помилка запиту</option>';
+                alert(`Не вдалося завантажити користувачів: ${err.message}\nПеревірте URL Аутентифікації`);
+            }
+        }
+
+        function checkLogin() {
+            const selectedUser = userSelect.value;
+            const password = passInput.value;
+            if (!usersData[selectedUser]) {
+                alert("Користувач не знайдений");
+                return;
+            }
+            if (usersData[selectedUser] == password) {
+                currentUserName = selectedUser;
+                userNameDisplay.textContent = currentUserName;
+                resetTimerUI();
+                switchScreen('mainScreen');
+            } else {
+                alert("Невірний пароль!");
+            }
+        }
+
+        function logoutAction() {
+            if (isRunning && !confirm("Таймер активний! Вийти без збереження?")) return;
+            resetTimerUI();
+            showLoginScreen();
+        }
+
+        // ======================== Навігація звіт ========================
+        async function showReportPage() {
+            switchScreen('reportPage');
+            await loadReport();
+        }
+
+        function closeReportPage() {
+            switchScreen('mainScreen');
+        }
+
+        // ======================== Події та ініціалізація ========================
+        function bindEvents() {
+            saveSettingsBtn.addEventListener('click', saveSettings);
+            if (openSetupFromLogin) openSetupFromLogin.addEventListener('click', showSetupFromAny);
+            if (skipSetupHint) skipSetupHint.addEventListener('click', () => {});
+            loginBtn.addEventListener('click', checkLogin);
+            btnStart.addEventListener('click', startTracking);
+            btnPause.addEventListener('click', pauseTracking);
+            btnStop.addEventListener('click', stopTracking);
+            showReportBtn.addEventListener('click', showReportPage);
+            logoutBtn.addEventListener('click', logoutAction);
+            closeReportBtn.addEventListener('click', closeReportPage);
+            // невелика оптимізація: при натисканні enter у полі пароля
+            passInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') checkLogin(); });
+        }
+
+        function init() {
+            bindEvents();
+            URL_AUTH = localStorage.getItem('urlAuth') || '';
+            URL_LOGS = localStorage.getItem('urlLogs') || '';
+            if (!URL_AUTH || !URL_LOGS) {
+                showSetupFromAny();
+            } else {
+                urlAuthInput.value = URL_AUTH;
+                urlLogsInput.value = URL_LOGS;
+                showLoginScreen();
+            }
+        }
+        init();
+    })();
+</script>
+</body>
+</html>
